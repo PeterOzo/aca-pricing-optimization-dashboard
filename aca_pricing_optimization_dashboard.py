@@ -98,7 +98,7 @@ if 'loan_status' in loan_data.columns:
 """# Python code to download FRED economic data directly in Google Colab:"""
 
 # Install required packages
-!pip install pandas-datareader yfinance fredapi requests
+#!pip install pandas-datareader yfinance fredapi requests
 
 import pandas as pd
 import pandas_datareader.data as web
