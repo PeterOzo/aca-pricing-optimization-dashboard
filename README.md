@@ -1,81 +1,98 @@
-# Real-Time Pricing Optimization Engine for Auto Loans
+# 🎯 ACA Pricing Optimization Pro
 
-Analyzing and optimizing auto-loan APRs using machine-learning risk models, live market intelligence, and multi-objective optimization. The Streamlit dashboard empowers lenders to balance profitability, competitive positioning, regulatory compliance, and fair-lending requirements—all in sub-millisecond decision times.
+**Team Member:** Peter Chika Ozo-Ogueji ([po3783a@american.edu](mailto:po3783a@american.edu))  
+**Live Demo:** https://aca-pricing-optimization-dashboard-tmcdvlrjildupmaracljvv.streamlit.app/  
+**Project Type:** Production-Ready Streamlit Dashboard  
+**Key Artifact:** Real_Time_Pricing_Optimization_for_Auto_Loans_fina_paper-2.pdf :contentReference[oaicite:5]{index=5}  
 
 ---
 
 ## Business Question  
-How can auto-loan originators continuously set borrower-specific APRs that maximize risk-adjusted profit, maintain competitive market positioning, comply with regulatory rate bounds, and uphold fair-lending standards?
+How can auto-loan originators set individualized APRs in real time that maximize risk-adjusted profit, maintain competitive market position, comply with regulatory and fair-lending constraints, and deliver sub-millisecond decision times?
 
 ## Business Case  
-In today’s fast-moving auto-finance market, static interest-rate tiers lead to suboptimal profitability, inconsistent risk management, and potential compliance gaps. By integrating predictive risk scoring with live competitor data and optimization, lenders can capture an estimated **\$5.1 M** in additional annual profit, improve default‐prediction accuracy by **11 percentage points** (from 62.5 % to 73.5 % AUC), and deliver individualized pricing with < 1 ms latency—driving both top- and bottom-line impact.
+Static, grade-based pricing forfeits revenue and exposes lenders to unmanaged risk. By integrating a high-fidelity ML risk model with live market intelligence and a multi-objective optimizer, lenders can capture an estimated **\$5.1 M** annual uplift, improve default-prediction AUC by **11 pp**, and retain competitive positioning at the 62.5th percentile—all while ensuring **100 %** uptime and sub-millisecond response :contentReference[oaicite:6]{index=6}.
 
 ## Analytics Question  
-Can we develop and deploy a machine-learning–driven pricing engine that:  
-1. Predicts borrower default probability in real time  
-2. Ingests and validates live market-rate data  
-3. Solves a multi-objective optimization under rate, profit, and fair-lending constraints  
-4. Returns an APR recommendation in under 1 ms  
+Can we build and deploy an end-to-end system that:  
+1. Predicts borrower default probability in real time (XGBoost, **73.47 % AUC**)  
+2. Ingests and validates live competitor APRs (Bankrate, Yahoo, FRED, scrapers)  
+3. Solves a constrained, multi-objective optimization for APR  
+4. Returns a production-grade recommendation in **< 1 ms**
 
-## Outcome Variable of Interest  
-- **Optimized APR (r\*)** per loan request  
+## Outcome Variable  
+- **Optimized APR (r\*)** recommended per application
 
-## Key Predictors & Inputs  
-- **Customer:** Loan amount (L), term (T), annual income, debt-to-income ratio (DTI), credit grade  
-- **Risk Model:** XGBoost-predicted default probability \(P(D\mid X)\) trained on 250 K historical loans  
-- **Market Data:** Competitor APRs from Bankrate, Yahoo Finance treasuries, FRED economic series, custom scrapers  
-- **Regulatory & Fair-Lending Bounds:** APR ∈ [6 %, 29.9 %]; expected profit ≥ \$500; demographic variance limits  
+## Key Inputs & Predictors  
+- **Customer Data:** Loan Amount (L), Term (T), Annual Income, DTI, Credit Grade  
+- **Risk Score:** \(P(D\mid X)\) from XGBoost trained on 250 K historical loans  
+- **Market Data:** Live auto-loan rates (8 sources), treasury yields (3 benchmarks), refreshed every 5 min  
+- **Constraints:**  
+  - APR ∈ [6.0 %, 29.9 %]  
+  - Expected profit ≥ \$500/loan  
+  - Demographic rate-variance limits for fair lending  
 
-## Data Set Description  
-- **Historical Loans:** 250 K records (2007–2020) from LendingClub, 185 engineered features (demographics, credit, macro)  
-- **Market Rates:** Live snapshots of auto-loan APRs (9–12 sources) refreshed every 5 minutes, cleaned and cross-validated  
-- **System Metrics:** API latency, model AUC, data-source health, throughput logs  
+## Data & Transformations  
+- **Loan History:** 250 K samples from Lending Club (2007–2020), 185 engineered features (demographics, financials, macro)  
+- **Market Intelligence:**  
+  - Z-score filtering, cross-source correlation for outlier removal  
+  - Time-series consistency checks on Fed and treasury data  
+- **Feature Engineering:** SMOTE for imbalance, recursive elimination to 24 top predictors
 
-## Methodology & Transformations  
-1. **Risk Assessment**  
-   - XGBoost classification with hyperparameter tuning, early stopping, and SMOTE balancing  
-   - Validated at 73.47 % AUC vs. 62.53 % logistic baseline  
+## Methodology & Architecture  
 
-2. **Market Intelligence**  
-   - Z-score filtering and cross-source correlation for outlier removal  
-   - Time-series consistency checks on treasury yields and competitor rates  
+### 1. Risk Assessment Model  
+- **Algorithm:** XGBoost binary classifier  
+- **Hyperparameters:** `eta=0.1`, `max_depth=6`, `subsample=0.9`, early stopping  
+- **Performance:** 73.47 % AUC vs. 62.53 % logistic baseline :contentReference[oaicite:7]{index=7}
 
-3. **Multi-Objective Optimization**  
-   \[
-   r^* = \arg\max_{r}\Bigl[
-     \alpha\,\text{Profit}(r)
-     + \beta\,\text{Competition}(r)
-     - \gamma\,\text{Risk}(r)
-   \Bigr]
-   \]  
-   - **Profit(r):** \(r\,L\,T - P(D\mid X)\,L\,\mathrm{LGD} - \mathrm{OpCost}\)  
-   - **Competition(r):** Penalty for deviation from target percentile (62.5 th)  
-   - **Risk(r):** Penalty for high DTI, low income, large loan size  
-   - **Constraints:** APR bounds, profit minimums, fair-lending variance  
+### 2. Market Data Module  
+- **Sources:** Bankrate (auto-loan), Yahoo Finance (treasuries), Federal Reserve APIs, custom scrapers  
+- **Refresh:** Every 5 minutes, TTL caching (300 s) for stability  
 
-4. **Dashboard & Delivery**  
-   - Streamlit UI for input, results, and interactive charts  
-   - Intelligent caching (TTL=300 s) and parallel pipelines → < 1 ms response  
+### 3. Multi-Objective Optimization  
+\[
+r^* = \arg\max_{r}\Bigl[
+  \alpha\,\mathrm{Profit}(r)
+  + \beta\,\mathrm{Competition}(r)
+  - \gamma\,\mathrm{Risk}(r)
+\Bigr]
+\]  
+- **Profit:** \(rLT - P(D\mid X)L\,\mathrm{LGD} - \mathrm{OpCost}\)  
+- **Competition:** Penalty for deviation from 62.5th percentile  
+- **Risk:** Penalty scaling with DTI, income shortfall, loan size  
+- **Modes:**  
+  - **standard** (market-aware)  
+  - **competitive** (cap at market_avg + 0.5 %)  
+  - **profit-optimized** (+0.5 % uplift)
 
-## Descriptive & Diagnostic Analysis  
-- **APR Distribution vs. Market:** Histograms and box plots compare optimized APRs to live competitor rates  
-- **Profit & Risk Waterfall:** Financial breakdown of revenue, expected loss, operating & funding costs  
-- **Performance Trends:** 7-day API latency and health-score time series  
+### 4. Streamlit Dashboard  
+- **Pages:**  
+  - Executive Command Center (system health, live KPIs)  
+  - Real-Time Pricing Engine (input form & metrics)  
+  - Market Intelligence (histograms, box plots, scatter)  
+  - System Health Monitor (latency, uptime, AUC)  
+  - Business Impact Analysis (ROI charts, scenario bar & scatter)  
+- **Performance:**  
+  - **Latency:** 0.83 ms avg (ThreadPoolExecutor, caching)  
+  - **Uptime:** 100 % since launch  
+  - **Throughput:** ~150 req/s  
 
-## Results & Impact  
-| Metric                        | Baseline      | Optimized System | Δ Improvement          |
-|-------------------------------|---------------|------------------|------------------------|
-| Default-Model AUC             | 62.53 %       | 73.47 %          | +10.94 pp              |
-| Profit per Loan               | \$2,630       | \$3,855          | +\$1,225               |
-| Annual Profit Uplift          | –             | \$5.1 M          | –                      |
-| Market Percentile Retained    | static tier   | 62.5 th          | dynamic adaptation     |
-| API Response                  | batch (hrs)   | 0.83 ms          | 99.98 % faster         |
-| Fair-Lending Compliance Score | 85–95 %       | 100 %            | +5–15 pp               |
+## Results & Business Impact  
+
+| Metric                          | Baseline    | This System   | Improvement      |
+|---------------------------------|-------------|---------------|------------------|
+| Risk AUC                        | 62.53 %     | 73.47 %       | +10.94 pp        |
+| Expected Profit/Loan            | \$2,630     | \$3,855       | +\$1,225         |
+| Annual Revenue Impact           | —           | \$5.1 M       | —                |
+| Market Position Percentile      | static      | 62.5th        | dynamic adaptive |
+| API Response Time               | 2–4 hrs     | 0.83 ms       | 99.98 % faster   |
+| Fair-Lending Compliance Score   | 85–95 %     | 100 %         | +5–15 pp         |
 
 ## Installation & Execution  
 ```bash
-git clone https://github.com/YourUsername/AutoLoanPricingOpt.git
-cd AutoLoanPricingOpt
+git clone https://github.com/YourUsername/ACA-PricingOpt.git
+cd ACA-PricingOpt
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 streamlit run app.py
